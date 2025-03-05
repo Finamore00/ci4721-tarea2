@@ -106,6 +106,10 @@ internal class Graph {
         return order
     }
 
+    /*
+    * Given an input node 'start', returns the length of the longest path within
+    * the graph originating at the 'start' node.
+    * */
     fun longestPathLen(start: GraphNode): UInt {
         if (maxDistancesCache[start] != null) return maxDistancesCache[start]!!
 

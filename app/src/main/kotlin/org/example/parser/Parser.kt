@@ -5,6 +5,12 @@ import kotlin.collections.*
 class InvalidTokenException(message: String): Exception(message)
 class InvalidProductionException(message: String): Exception(message)
 
+enum class PrecedenceTypes {
+    LowerThan,
+    EqualThan,
+    HigherThan
+}
+
 /*
 * Parser for Operator grammars.
 * */
@@ -55,7 +61,35 @@ class Parser {
         initial = c
     }
 
-    fun setPrecedence(higher: Char, lower: Char) {}
+    fun setPrecedence(a: Char, p: PrecedenceTypes, b: Char) {
+        val bGNode = opGraph.getGNode(b) ?: throw NoSuchElementException("Token $b not registered")
+        val aFNode = opGraph.getFNode(a) ?: throw NoSuchElementException("Token $a not registered")
+        when (p) {
+            PrecedenceTypes.LowerThan -> {
+                opGraph.addConnection(bGNode, aFNode)
+            }
+            PrecedenceTypes.HigherThan -> {
+                opGraph.addConnection(aFNode, bGNode)
+            }
+            else -> {}
+        }
+    }
+
+    /*
+    * Calculates the values of the f and g functions for each token in the grammar,
+    * subsequently locks the parser so no more registrations or precedence modifications
+    * are possible
+    * */
+    fun build() {
+        if (built) return
+
+        for (nt in nonTerminals) {
+            f[nt] = opGraph.longestPathLen(opGraph.getFNode(nt)!!)
+            g[nt] = opGraph.longestPathLen(opGraph.getGNode(nt)!!)
+        }
+        built = true
+    }
+
     fun parse(input: String): Boolean = true
 
 }
