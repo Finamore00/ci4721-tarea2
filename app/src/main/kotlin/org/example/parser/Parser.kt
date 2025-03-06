@@ -1,5 +1,7 @@
 package org.example.parser
 
+import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.collections.*
 
 class InvalidTokenException(message: String): Exception(message)
@@ -11,6 +13,21 @@ enum class PrecedenceTypes {
     HigherThan
 }
 
+private fun isTerminal(a: Char): Boolean {
+    return a in ('a'..'z') + ('!'..'#') + ('%'..'/')
+}
+
+private fun isNonTerminal(a: Char): Boolean {
+    return a in 'A'..'Z'
+}
+
+data class GrammarRule(val nonTerm: Char, val prod: String) {
+    override fun toString(): String {
+        return "$nonTerm → $prod"
+    }
+}
+
+
 /*
 * Parser for Operator grammars.
 * */
@@ -18,40 +35,37 @@ class Parser {
     private var nonTerminals: MutableSet<Char> = mutableSetOf()
     private var terminals: MutableSet<Char> = mutableSetOf()
     private var initial: Char? = null
-    private var rules: MutableMap<Char, MutableList<String>> = mutableMapOf()
+    private val prodMap: MutableMap<String, GrammarRule> = mutableMapOf()
     private var f: MutableMap<Char, UInt> = mutableMapOf()
     private var g: MutableMap<Char, UInt> = mutableMapOf()
     private var built: Boolean = false
     private var opGraph: Graph = Graph()
 
+    private val precedenceTable: MutableMap<Pair<Char, Char>, PrecedenceTypes> = mutableMapOf()
+
     init {
         nonTerminals.add('$')
         opGraph.addNode('$')
-    }
-
-    private fun isTerminal(a: Char): Boolean {
-        return a in ('a'..'z') + ('!'..'#') + ('%'..'/')
-    }
-
-    private fun isNonTerminal(a: Char): Boolean {
-        return a in 'A'..'Z'
+        f['$'] = 0u
+        g['$'] = 0u
     }
 
     fun addRule(nonTerm: Char, prod: String) {
         //Check that the production is a valid operator grammar production
-        if (!isNonTerminal(nonTerm)) throw InvalidTokenException("No-Terminal debe ser una única letra mayúscula.")
+        if (!isNonTerminal(nonTerm)) throw InvalidTokenException("Non-terminal must be capital letter.")
         nonTerminals.add(nonTerm)
+
         var foundNonTerm: Boolean = false
         prod.split("\\s+".toRegex()).forEach { sym ->
             if (sym.length != 1) {
-                throw InvalidTokenException("Los símbolos del lenguaje deben ser caracteres individuales.")
+                throw InvalidTokenException("All language tokens must be single ASCII characters.")
             }
 
             when (val c = sym[0]) {
                 in 'A'..'Z' -> {
                     if (foundNonTerm) {
                         throw InvalidProductionException(
-                            "La producción ingresada no pertenece a una gramática de operadores."
+                            "Not an operator grammar production."
                         )
                     }
                     foundNonTerm = true
@@ -63,11 +77,12 @@ class Parser {
                     terminals.add(c)
                     opGraph.addNode(c)
                 }
-                else -> throw InvalidTokenException("Símbolo inválido '$c'")
+                else -> throw InvalidTokenException("Invalid symbol '$c'")
             }
         }
 
-        rules.getOrPut(nonTerm) { mutableListOf() }.add(prod)
+        val prodOnlyTerminals = prod.filter {isTerminal(it)}
+        prodMap[prodOnlyTerminals] = GrammarRule(nonTerm, prod)
         return
     }
 
@@ -92,6 +107,7 @@ class Parser {
             }
             else -> {}
         }
+        precedenceTable[Pair(a, b)] = p
     }
 
     /*
@@ -101,17 +117,55 @@ class Parser {
     * */
     fun build() {
         if (built) {
-            System.err.println("WARNING: El parser ya fue construido")
+            System.err.println("ADVERTENCIA: El parser ya fue construido")
             return
         }
 
-        for (nt in nonTerminals) {
+        for (nt in terminals) {
             f[nt] = opGraph.longestPathLen(opGraph.getFNode(nt)!!)
             g[nt] = opGraph.longestPathLen(opGraph.getGNode(nt)!!)
         }
         built = true
     }
 
-    fun parse(input: String): Boolean = true
+    fun parse(input: String): List<GrammarRule> {
+        val st: Stack<Char> = Stack<Char>()
+        val inputTokenized: MutableList<Char> = input.split(" ").map {
+            if (it.length != 1) throw IllegalArgumentException("Invalid token found: $it.")
+            it[0]
+        }.toMutableList()
+        inputTokenized.add('$')
+
+        st.push('$')
+        var currInputPos: Int = 0
+        var e: Char = inputTokenized[currInputPos]
+        currInputPos += 1
+        val result: MutableList<GrammarRule> = mutableListOf()
+
+        do {
+            val p: Char = st.peek()
+            if (p == '$' && e == '$') break
+
+            when (precedenceTable[Pair(p, e)]) {
+                PrecedenceTypes.LowerThan, PrecedenceTypes.EqualThan -> {
+                    st.push(e)
+                    e = inputTokenized[currInputPos]
+                    currInputPos += 1
+                }
+                PrecedenceTypes.HigherThan -> {
+                    var x: String = ""
+                    do {
+                        x += "${st.pop()}"
+                    } while (precedenceTable[Pair(st.peek(), x[x.length - 1])]!! != PrecedenceTypes.LowerThan)
+                    result.add(prodMap[x]!!)
+                }
+                null -> {
+                    throw IllegalStateException("Error found. Couldn't parse")
+                }
+            }
+        } while (true)
+
+        return result
+    }
 
 }

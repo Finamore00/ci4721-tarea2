@@ -116,7 +116,8 @@ fun main() {
             }
             "parse" -> {
                 val w = input.takeLast(input.size - 1).joinToString(" ")
-                p.parse(w)
+                println(p.parse(w))
+
             }
             "help" -> printHelp()
             "salir" -> quitFlag = true
