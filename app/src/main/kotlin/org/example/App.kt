@@ -79,7 +79,7 @@ fun main() {
                 }
 
                 try {
-                    var relation: String = ""
+                    var relation: String
                     when (input[2][0]) {
                         '<' -> {
                             p.setPrecedence(input[1][0], PrecedenceTypes.LowerThan, input[3][0])
@@ -122,7 +122,7 @@ fun main() {
                 p.parse(w)
             }
             "help" -> printHelp()
-            "exit", "quit" -> quitFlag = true
+            "salir" -> quitFlag = true
             else -> println("ERROR: Comando desconocido")
         }
     }

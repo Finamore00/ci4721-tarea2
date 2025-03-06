@@ -68,6 +68,8 @@ fun printHelp() {
     println("\t+ PARSE <string>")
     println("\t\tRealiza análisis sintáctico sobre <string>, mostrando los estados de la entrada y la pila y las " +
             "acciones realizadas")
+    println("\t+ SALIR")
+    println("\t\tAborta la ejecución del programa.")
     println("Consideraciones:")
     println("\t- Todos los símbolos de la gramática deben ser caracteres ASCII individuales. Los no terminales deben" +
             "ser letras mayúsculas y los no terminales letras minúsculas o símbolos (excepto $)")
