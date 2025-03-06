@@ -24,9 +24,22 @@ class Parser {
     private var built: Boolean = false
     private var opGraph: Graph = Graph()
 
+    init {
+        nonTerminals.add('$')
+        opGraph.addNode('$')
+    }
+
+    private fun isTerminal(a: Char): Boolean {
+        return a in ('a'..'z') + ('!'..'#') + ('%'..'/')
+    }
+
+    private fun isNonTerminal(a: Char): Boolean {
+        return a in 'A'..'Z'
+    }
+
     fun addRule(nonTerm: Char, prod: String) {
         //Check that the production is a valid operator grammar production
-        if (nonTerm !in 'A'..'Z') throw InvalidTokenException("No-Terminal debe ser una única letra mayúscula.")
+        if (!isNonTerminal(nonTerm)) throw InvalidTokenException("No-Terminal debe ser una única letra mayúscula.")
         nonTerminals.add(nonTerm)
         var foundNonTerm: Boolean = false
         prod.split("\\s+".toRegex()).forEach { sym ->
@@ -43,10 +56,12 @@ class Parser {
                     }
                     foundNonTerm = true
                     nonTerminals.add(c)
+                    opGraph.addNode(c)
                 }
                 in 'a'..'z', in ('!'..'#') + ('%'..'/')-> {
                     foundNonTerm = false
                     terminals.add(c)
+                    opGraph.addNode(c)
                 }
                 else -> throw InvalidTokenException("Símbolo inválido '$c'")
             }
@@ -57,10 +72,15 @@ class Parser {
     }
 
     fun setInitial(c: Char) {
+        if (!isNonTerminal(c)) throw InvalidTokenException("Non terminal must be capital.")
+
+        nonTerminals.add(c)
         initial = c
     }
 
     fun setPrecedence(a: Char, p: PrecedenceTypes, b: Char) {
+        if ((!isTerminal(a) && a != '$') || (!isTerminal(b) && b != '$')) throw InvalidTokenException("Tokens must be non-terminal")
+
         val bGNode = opGraph.getGNode(b) ?: throw NoSuchElementException("Token $b not registered")
         val aFNode = opGraph.getFNode(a) ?: throw NoSuchElementException("Token $a not registered")
         when (p) {
@@ -80,7 +100,10 @@ class Parser {
     * are possible
     * */
     fun build() {
-        if (built) return
+        if (built) {
+            System.err.println("WARNING: El parser ya fue construido")
+            return
+        }
 
         for (nt in nonTerminals) {
             f[nt] = opGraph.longestPathLen(opGraph.getFNode(nt)!!)

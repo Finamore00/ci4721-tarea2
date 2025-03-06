@@ -19,9 +19,30 @@ fun printWrongProductionErr() {
     System.err.println("ERROR: La producción ingresada no es válida para una gramática de operadores.")
 }
 
+fun printArgCountErr() {
+    System.err.println("ERROR: Número incorrecto de argumentos.")
+    System.err.println("Para ver utilización de los comandos ver 'help'.")
+}
+
+fun printWrongOpErr() {
+    System.err.println("ERROR: El operador de precedencia ingresado no es válido.")
+    System.err.println("Para ver los operadores disponibles, ver 'help'")
+}
+
+fun printSymNotRegisteredErr() {
+    System.err.println("Alguno de los símbolos ingresados no existe en la gramática.")
+    System.err.println("Registre alguna regla que involucre a los símbolos para registrarlos en la gramática.")
+}
+
+fun printCyclicGraphErr() {
+    System.err.println("ERROR: Se detectaron ciclos de precedencia entre los operadores.")
+    System.err.println("El analizador no se puede construir.")
+}
+
 fun printUnknownErr() {
     System.err.println("ERROR: Ocurrió algún error desconocido.")
 }
+
 fun getCommand(): String {
     print("Ingrese un comando: ")
     return readln()
@@ -32,7 +53,7 @@ fun printHelp() {
     println("Uso: <COMANDO> [<ARGUMENTOS>]")
     println("Comandos:")
     println("\t+ RULE <no-terminal> [<simbolo>]")
-    println("\t\tAgrega a la gramática la producción <no-terminal> → [<símbolos>]. Si la lista de símbolos es vacía se" +
+    println("\t\tAgrega a la gramática la producción <no-terminal> → [<símbolos>]. Si la lista de símbolos es vacía se " +
             "agrega la producción <no-terminal> → λ.")
     println("\t\t[<simbolos>] es una lista de símbolos de la gramática separados por espacios.")
     println("\t+ INIT <no-terminal>")
@@ -53,7 +74,3 @@ fun printHelp() {
     println("\t- En la definición de reglas todos los símbolos deben estar debidamente separados por espacios.")
 }
 
-fun printArgCountErr() {
-    System.err.println("ERROR: Número incorrecto de argumentos.")
-    System.err.println("Para ver utilización de los comandos ver 'help'.")
-}

@@ -7,6 +7,7 @@ import org.example.parser.Parser
 import org.example.clientUtils.*
 import org.example.parser.InvalidProductionException
 import org.example.parser.InvalidTokenException
+import org.example.parser.PrecedenceTypes
 
 fun main() {
     /*
@@ -39,20 +40,87 @@ fun main() {
                     println("Agregada la regla '$nonTerm → $prod'")
                 } catch (e: Exception) {
                     when (e) {
-                        is InvalidTokenException -> {
-                            printWrongTokenErr()
-                        }
-                        is InvalidProductionException -> {
-                            printWrongProductionErr()
-                        }
+                        is InvalidTokenException -> printWrongTokenErr()
+                        is InvalidProductionException -> printWrongProductionErr()
+                        else -> printUnknownErr()
+                    }
+                    continue
+                }
+            }
+            "init" -> {
+                if (input.size != 2) {
+                    printArgCountErr()
+                    continue
+                }
+                if (input[1].length != 1) {
+                    printWrongNonTerminalErr()
+                    continue
+                }
+                val nonTerm = input[1][0]
+                try {
+                    p.setInitial(nonTerm)
+                    println("'$nonTerm' es ahora el símbolo inicial de la gramática.")
+                } catch (e: Exception) {
+                    when (e) {
+                        is InvalidTokenException -> printWrongTokenErr()
                         else -> printUnknownErr()
                     }
                 }
             }
-            "init" -> println("Se solicitó definir el símbolo inicial de la gramática")
-            "prec" -> println("Se solicitó definir la relación de precedencia entre dos no-terminales")
-            "build" -> println("Se solicitó construir el analizador sintáctico")
-            "parse" -> println("Se solicitó parsear una frase del lenguaje")
+            "prec" -> {
+                if (input.size != 4) {
+                    printArgCountErr()
+                    continue
+                }
+
+                if (input.takeLast(input.size - 1).any {tok -> tok.length != 1}) {
+                    printWrongTokenErr()
+                    continue
+                }
+
+                try {
+                    var relation: String = ""
+                    when (input[2][0]) {
+                        '<' -> {
+                            p.setPrecedence(input[1][0], PrecedenceTypes.LowerThan, input[3][0])
+                            relation = "menor"
+                        }
+                        '>' -> {
+                            p.setPrecedence(input[1][0], PrecedenceTypes.HigherThan, input[3][0])
+                            relation = "mayor"
+                        }
+                        '=' -> {
+                            p.setPrecedence(input[1][0], PrecedenceTypes.EqualThan, input[3][0])
+                            relation = "igual"
+                        }
+                        else -> {
+                            printWrongOpErr()
+                            continue
+                        }
+                    }
+                    println("'${input[1][0]}' tiene $relation precedencia que '${input[3][0]}'")
+
+                } catch (e: Exception) {
+                    when (e) {
+                        is InvalidTokenException -> printWrongTokenErr()
+                        is NoSuchElementException -> printSymNotRegisteredErr()
+                    }
+                }
+            }
+            "build" -> {
+                try {
+                    p.build()
+                    println("Se ha construido exitosamente el analizador.")
+                } catch (e: Exception) {
+                    when (e) {
+                        is IllegalStateException -> printCyclicGraphErr()
+                    }
+                }
+            }
+            "parse" -> {
+                val w = input.takeLast(input.size - 1).joinToString(" ")
+                p.parse(w)
+            }
             "help" -> printHelp()
             "exit", "quit" -> quitFlag = true
             else -> println("ERROR: Comando desconocido")
