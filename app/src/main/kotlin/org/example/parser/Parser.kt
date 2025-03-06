@@ -6,6 +6,7 @@ import kotlin.collections.*
 
 class InvalidTokenException(message: String): Exception(message)
 class InvalidProductionException(message: String): Exception(message)
+class InvalidComparisonException(message: String): Exception(message)
 
 enum class PrecedenceTypes {
     LowerThan,
@@ -116,21 +117,28 @@ class Parser {
     * are possible
     * */
     fun build() {
-        if (built) {
-            System.err.println("ADVERTENCIA: El parser ya fue construido")
-            return
-        }
-
-        for (nt in terminals) {
-            f[nt] = opGraph.longestPathLen(opGraph.getFNode(nt)!!)
-            g[nt] = opGraph.longestPathLen(opGraph.getGNode(nt)!!)
+        if (!built) {
+            for (nt in terminals) {
+                f[nt] = opGraph.longestPathLen(opGraph.getFNode(nt)!!)
+                g[nt] = opGraph.longestPathLen(opGraph.getGNode(nt)!!)
+            }
         }
         built = true
+
+        println("Analizador sintáctico construido")
+        println("Valores para f:")
+        for (k in f.keys) {
+            println("\t$k: ${f[k]}")
+        }
+        println("Valores para g:")
+        for (k in g.keys) {
+            println("\t$k: ${g[k]}")
+        }
     }
 
     fun parse(input: String): List<GrammarRule> {
         val st: Stack<Char> = Stack<Char>()
-        val inputTokenized: MutableList<Char> = input.split(" ").map {
+        val inputTokenized: MutableList<Char> = input.split("\\s+".toRegex()).map {
             if (it.length != 1) throw IllegalArgumentException("Invalid token found: $it.")
             it[0]
         }.toMutableList()
@@ -160,7 +168,7 @@ class Parser {
                     result.add(prodMap[x]!!)
                 }
                 null -> {
-                    throw IllegalStateException("Error found. Couldn't parse")
+                    throw InvalidComparisonException("ERROR: $p no es comparable con $e")
                 }
             }
         } while (true)

@@ -35,8 +35,8 @@ fun printSymNotRegisteredErr() {
 }
 
 fun printCyclicGraphErr() {
-    System.err.println("ERROR: Se detectaron ciclos de precedencia entre los operadores.")
-    System.err.println("El analizador no se puede construir.")
+    System.err.println("ERROR: Se detectaron ciclos en el grafo de operadores.")
+    System.err.println("Las funciones f y g no puedieron ser construidas.")
 }
 
 fun printUnknownErr() {

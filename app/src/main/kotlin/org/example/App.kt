@@ -1,10 +1,7 @@
 package org.example
 
-import org.example.parser.Parser
 import org.example.clientUtils.*
-import org.example.parser.InvalidProductionException
-import org.example.parser.InvalidTokenException
-import org.example.parser.PrecedenceTypes
+import org.example.parser.*
 
 fun main() {
     /*
@@ -107,7 +104,6 @@ fun main() {
             "build" -> {
                 try {
                     p.build()
-                    println("Se ha construido exitosamente el analizador.")
                 } catch (e: Exception) {
                     when (e) {
                         is IllegalStateException -> printCyclicGraphErr()
@@ -116,7 +112,15 @@ fun main() {
             }
             "parse" -> {
                 val w = input.takeLast(input.size - 1).joinToString(" ")
-                println(p.parse(w))
+
+                try {
+                    println(p.parse(w))
+                } catch (e: Exception) {
+                    when (e) {
+                        is InvalidComparisonException -> System.err.println(e.message)
+                        else -> printUnknownErr()
+                    }
+                }
 
             }
             "help" -> printHelp()
