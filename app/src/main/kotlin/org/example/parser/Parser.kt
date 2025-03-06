@@ -25,12 +25,11 @@ class Parser {
     private var opGraph: Graph = Graph()
 
     fun addRule(nonTerm: Char, prod: String) {
-
         //Check that the production is a valid operator grammar production
         if (nonTerm !in 'A'..'Z') throw InvalidTokenException("No-Terminal debe ser una única letra mayúscula.")
         nonTerminals.add(nonTerm)
         var foundNonTerm: Boolean = false
-        prod.split(" ").forEach { sym ->
+        prod.split("\\s+".toRegex()).forEach { sym ->
             if (sym.length != 1) {
                 throw InvalidTokenException("Los símbolos del lenguaje deben ser caracteres individuales.")
             }

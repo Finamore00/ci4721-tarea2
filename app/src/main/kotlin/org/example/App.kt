@@ -3,7 +3,10 @@
  */
 package org.example
 
-import kotlin.collections.MutableSet
+import org.example.parser.Parser
+import org.example.clientUtils.*
+import org.example.parser.InvalidProductionException
+import org.example.parser.InvalidTokenException
 
 fun main() {
     /*
@@ -12,19 +15,45 @@ fun main() {
     * */
     var input: List<String>
     var quitFlag: Boolean = false
+    val p: Parser = Parser()
+
+    printWelcome()
 
     while (!quitFlag) {
-        print("Gimme something boy: ")
-        input = readln().split(" ")
-        if (input[0].isBlank()) continue
+        input = getCommand().split("\\s+".toRegex())
 
         when (input[0].lowercase()) {
-            "rule" -> println("Se solicitó definir una nueva regla")
+            "rule" -> {
+                if (input.size < 2) {
+                    printArgCountErr()
+                    continue
+                }
+                if (input[1].length != 1) {
+                    printWrongNonTerminalErr()
+                    continue
+                }
+                try {
+                    val nonTerm = input[1][0]
+                    val prod = input.takeLast(input.size - 2).joinToString(" ")
+                    p.addRule(nonTerm, prod)
+                    println("Agregada la regla '$nonTerm → $prod'")
+                } catch (e: Exception) {
+                    when (e) {
+                        is InvalidTokenException -> {
+                            printWrongTokenErr()
+                        }
+                        is InvalidProductionException -> {
+                            printWrongProductionErr()
+                        }
+                        else -> printUnknownErr()
+                    }
+                }
+            }
             "init" -> println("Se solicitó definir el símbolo inicial de la gramática")
             "prec" -> println("Se solicitó definir la relación de precedencia entre dos no-terminales")
             "build" -> println("Se solicitó construir el analizador sintáctico")
             "parse" -> println("Se solicitó parsear una frase del lenguaje")
-            "help" -> println("Se solicitó imprimir el manual del generador")
+            "help" -> printHelp()
             "exit", "quit" -> quitFlag = true
             else -> println("ERROR: Comando desconocido")
         }
