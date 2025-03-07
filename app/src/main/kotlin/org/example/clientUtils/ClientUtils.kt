@@ -39,6 +39,10 @@ fun printCyclicGraphErr() {
     System.err.println("Las funciones f y g no puedieron ser construidas.")
 }
 
+fun printParserNotBuiltErr() {
+    System.err.println("ERROR: El analizador no ha sido construido.")
+}
+
 fun printUnknownErr() {
     System.err.println("ERROR: Ocurrió algún error desconocido.")
 }

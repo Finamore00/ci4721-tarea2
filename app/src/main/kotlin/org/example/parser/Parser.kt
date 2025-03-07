@@ -166,6 +166,10 @@ class Parser {
     * of productions used during the parsing process. Also prints the
     * */
     fun parse(input: String): List<GrammarRule> {
+        if (!built) {
+            throw IllegalStateException()
+        }
+
         //Variables for parser operation
         val st: Stack<Char> = Stack<Char>()
         val inputTokenized: MutableList<Char> = input.split("\\s+".toRegex()).map {
@@ -185,6 +189,8 @@ class Parser {
 
         do {
             var action: String = ""
+            val stStr = printSt.joinToString(" ")
+            val inputStr = inputTokenized.slice(currInputPos-1 until inputTokenized.size).joinToString(" ")
 
             if (quitFlag) {
                 println("Parseo fallido.")
@@ -194,11 +200,9 @@ class Parser {
             val p: Char = st.peek()
             if (p == '$' && e == '$') {
                 action = "Aceptar"
+                println(String.format("%-25s%-25s%-10s", stStr, inputStr, action))
                 break
             }
-
-            //Print status of stack
-            val stStr = printSt.joinToString(" ")
 
             if (!terminals.union(setOf('$')).contains(p)) {
                 throw NoSuchElementException("El símbolo $p no pertenece a la gramática.")
@@ -213,7 +217,6 @@ class Parser {
                     st.push(e)
                     printSt.push(e)
                     e = inputTokenized[currInputPos++]
-                    //Print action
                     action = "Leer"
                 }
                 PrecedenceTypes.HigherThan -> {
@@ -227,7 +230,6 @@ class Parser {
                         }
                         printSt.push(prodMap[x]!!.nonTerm)
                         result.add(prodMap[x]!!)
-                        //Print action
                         action = "Reducir ${prodMap[x]}"
                     } else {
                         action = "Rechazar."
@@ -239,8 +241,6 @@ class Parser {
                     throw InvalidComparisonException("ERROR: $p no es comparable con $e")
                 }
             }
-            //String status of input
-            val inputStr = "\t${input.substring(currInputPos-1..<input.length)}"
             println(String.format("%-25s%-25s%-10s", stStr, inputStr, action))
         } while (true)
 

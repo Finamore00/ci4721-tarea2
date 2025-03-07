@@ -119,6 +119,7 @@ fun main() {
                     when (e) {
                         is InvalidComparisonException -> System.err.println(e.message)
                         is NoSuchElementException -> System.err.println(e.message)
+                        is IllegalStateException -> printParserNotBuiltErr()
                         else -> printUnknownErr()
                     }
                 }
