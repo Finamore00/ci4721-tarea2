@@ -114,7 +114,7 @@ fun main() {
                 val w = input.takeLast(input.size - 1).joinToString(" ")
 
                 try {
-                    println(p.parse(w))
+                    p.parse(w)
                 } catch (e: Exception) {
                     when (e) {
                         is InvalidComparisonException -> System.err.println(e.message)
