@@ -139,7 +139,7 @@ class Parser {
     fun parse(input: String): List<GrammarRule> {
         val st: Stack<Char> = Stack<Char>()
         val inputTokenized: MutableList<Char> = input.split("\\s+".toRegex()).map {
-            if (it.length != 1) throw IllegalArgumentException("Invalid token found: $it.")
+            if (it.length != 1) throw IllegalArgumentException("EL token '$it' no es válido.")
             it[0]
         }.toMutableList()
         inputTokenized.add('$')
@@ -153,6 +153,14 @@ class Parser {
         do {
             val p: Char = st.peek()
             if (p == '$' && e == '$') break
+
+            if (!terminals.union(setOf('$')).contains(p)) {
+                throw NoSuchElementException("El símbolo $p no pertenece a la gramática.")
+            }
+
+            if (!terminals.union(setOf('$')).contains(e)) {
+                throw NoSuchElementException("El símbolo $e no pertenece a la gramática.")
+            }
 
             when (precedenceTable[Pair(p, e)]) {
                 PrecedenceTypes.LowerThan, PrecedenceTypes.EqualThan -> {

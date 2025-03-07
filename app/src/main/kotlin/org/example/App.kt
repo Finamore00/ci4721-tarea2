@@ -118,6 +118,7 @@ fun main() {
                 } catch (e: Exception) {
                     when (e) {
                         is InvalidComparisonException -> System.err.println(e.message)
+                        is NoSuchElementException -> System.err.println(e.message)
                         else -> printUnknownErr()
                     }
                 }
